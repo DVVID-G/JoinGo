@@ -77,7 +77,8 @@ All responses follow the shape: `{ data: ..., error?: ... }` when successful or 
 
 - POST `/api/auth/forgot-password`
   - Body: `{ email }`
-  - Returns a password reset link (generated via Firebase Admin or REST helper).
+  - Behavior: Client-side recommended — the frontend should call Firebase SDK `sendPasswordResetEmail(email)`.
+  - Note: For simplicity and security this backend does **not** generate or return password reset links. The endpoint exists for compatibility and returns a neutral message so callers can reuse a single API shape without revealing account existence.
 
 - POST `/api/auth/logout` (protected)
   - Header: `Authorization: Bearer <ID_TOKEN>`
@@ -94,9 +95,7 @@ All responses follow the shape: `{ data: ..., error?: ... }` when successful or 
   - Body (optional supplemental): `{ provider?, displayName?, avatarUrl?, locale?, phoneNumber?, firstName?, lastName?, email? }`
   - Behavior: validates ID token, reads provider info from Firebase Auth user record, merges provider fields with optional supplemental fields, upserts Firestore `users/{uid}`. Returns the upserted user document.
 
-- POST `/api/auth/oauth` (public) — server-side code exchange (optional)
-  - Body: `{ provider: 'google' | 'facebook', code: string, redirectUri?: string }`
-  - Behavior (Google implemented): exchanges authorization `code` for tokens with Google, fetches profile, creates or links a Firebase Auth user (by email when possible or deterministic provider uid), upserts Firestore `users/{uid}`, and returns `{ customToken, user }`. The client can then call `signInWithCustomToken(customToken)`.
+<!-- Server-side OAuth code-exchange removed. Use client-side Firebase Authentication and POST /api/auth/provider-sync. -->
 
 Security notes:
 - Protected endpoints require `Authorization: Bearer <ID_TOKEN>` header with a valid Firebase ID token. The `authMiddleware` handles verification.

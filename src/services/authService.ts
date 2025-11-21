@@ -60,16 +60,11 @@ export async function registerUser(input: RegisterInput) {
   return { uid: userRecord.uid, email: userRecord.email, displayName: userRecord.displayName };
 }
 
-/**
- * Generate a password reset link for the given email using Firebase Admin.
- * Returns the generated link.
- */
-export async function generatePasswordResetLink(email: string) {
-  const auth = firebaseAuth();
-  if (!auth) throw Errors.server('Auth service unavailable');
-  const link = await auth.generatePasswordResetLink(email);
-  return link;
-}
+// NOTE: password reset is handled client-side via Firebase Auth SDK.
+// Server-side generation of password reset links was intentionally removed
+// in favor of the client-side `sendPasswordResetEmail` flow. If you need
+// to re-introduce server-side link generation later, implement
+// `admin.auth().generatePasswordResetLink(email, actionCodeSettings)` here.
 
 /**
  * Revoke refresh tokens for a user (server-side logout effect).

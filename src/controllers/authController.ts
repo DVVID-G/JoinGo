@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { registerUser, generatePasswordResetLink, revokeRefreshTokens, loginWithEmailPassword } from '../services/authService';
+import { registerUser, revokeRefreshTokens, loginWithEmailPassword } from '../services/authService';
 import { validate } from '../utils/validate';
 import { AuthenticatedRequest } from '../middlewares/authMiddleware';
 import { registerSchema, forgotSchema, loginSchema, changeEmailSchema, changePasswordSchema } from './schemas/authSchemas';
@@ -18,12 +18,22 @@ export async function registerController(req: Request, res: Response) {
 }
 
 /**
- * Generate a password reset link for the given email and return it.
+ * Forgot password (client-side recommended).
+ *
+ * This endpoint intentionally does not generate or return password reset links.
+ * Recommended flow: the frontend should call Firebase client SDK `sendPasswordResetEmail(email)`
+ * which lets Firebase send the reset email using the project's configured templates.
+ *
+ * For compatibility, the backend accepts `{ email }` and returns a neutral response
+ * so callers can use the same API shape without revealing account existence.
  */
 export async function forgotPasswordController(req: Request, res: Response) {
   const { email } = validate(forgotSchema, req.body);
-  const link = await generatePasswordResetLink(email);
-  res.json({ data: { link } });
+  // Optionally log the attempt for monitoring (do not disclose existence).
+  logger.info('Password reset requested for email (redacted): %s', email ? '[REDACTED]' : '');
+
+  // Always return a neutral, non-revealing message.
+  return res.json({ data: { message: 'If an account exists for that email, a password reset link will be sent.' } });
 }
 
 /**
