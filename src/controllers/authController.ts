@@ -6,9 +6,6 @@ import { registerSchema, forgotSchema, loginSchema, changeEmailSchema, changePas
 import { providerSyncSchema } from './schemas/authSchemas';
 import { firebaseAuth } from '../config/firebase';
 import { createOrSyncUserFromProvider } from '../services/userService';
-import { oauthSchema } from './schemas/authSchemas';
-import { exchangeCodeForProfile } from '../services/oauthService';
-import { upsertProfileFromProvider } from '../services/userService';
 import { logger } from '../utils/logger';
 
 /**
@@ -103,57 +100,6 @@ export async function providerSyncController(req: AuthenticatedRequest, res: Res
   res.json({ data: result });
 }
 
-/**
- * Server-side OAuth endpoint. Exchanges `code` for profile info, creates or
- * links a Firebase Auth user, upserts the Firestore profile, and returns a
- * Firebase custom token that the client can exchange via `signInWithCustomToken`.
- */
-export async function oauthController(req: Request, res: Response) {
-  const { provider, code, redirectUri } = validate(oauthSchema, req.body);
-  // Exchange code for normalized profile
-  const profile = await exchangeCodeForProfile(provider, code, redirectUri);
-
-  const auth = firebaseAuth();
-  if (!auth) throw new Error('Auth not initialized');
-
-  // Try to find existing user by email
-  let uid: string | undefined;
-  if (profile.email) {
-    try {
-      const existing = await auth.getUserByEmail(profile.email);
-      uid = existing.uid;
-    } catch (e) {
-      // Not found -> will create
-    }
-  }
-
-  // If no UID yet, construct deterministic uid based on provider
-  if (!uid) {
-    uid = `provider_${provider}_${profile.providerUid || Math.random().toString(36).slice(2,10)}`;
-    // Try to create user in Firebase Auth (ignore if already exists)
-    try {
-      await auth.createUser({ uid, email: profile.email, displayName: profile.displayName, photoURL: profile.avatarUrl });
-      logger.info('Created auth user for oauth uid', uid);
-    } catch (e) {
-      // If creation fails because user exists, ignore and continue
-      logger.warn('Could not create auth user during oauth flow', e);
-    }
-  }
-
-  // Upsert Firestore profile using provider-aware upsert (preserve completed profiles)
-  const user = await upsertProfileFromProvider(uid, {
-    provider: profile.provider,
-    providerUid: profile.providerUid,
-    displayName: profile.displayName,
-    firstName: profile.firstName,
-    lastName: profile.lastName,
-    email: profile.email,
-    avatarUrl: profile.avatarUrl,
-    locale: profile.locale
-  } as any);
-
-  // Create Firebase custom token for client to sign in
-  const customToken = await auth.createCustomToken(uid);
-
-  res.json({ data: { customToken, user } });
-}
+// Server-side OAuth controller removed. Use client-side Firebase Authentication
+// and the protected `POST /api/auth/provider-sync` endpoint to sync provider
+// profiles into Firestore.

@@ -41,11 +41,4 @@ export const providerSyncSchema = z.object({
 });
 
 export type ProviderSyncInput = z.infer<typeof providerSyncSchema>;
-
-export const oauthSchema = z.object({
-  provider: z.enum(['google', 'facebook']),
-  code: z.string().min(10),
-  redirectUri: z.string().url().optional()
-});
-
-export type OAuthInput = z.infer<typeof oauthSchema>;
+// Server-side OAuth is removed; client-side Firebase Authentication is recommended.

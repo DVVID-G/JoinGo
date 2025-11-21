@@ -12,13 +12,12 @@ Backend service providing REST API and foundations for real-time signaling. This
 - Auth middleware validating Firebase ID tokens (Bearer)
 - User profile CRUD (upsert/sync, read, update, soft-delete)
 - Provider sync: client-side Firebase sign-in -> `POST /api/auth/provider-sync`
-- Optional server-side OAuth code-exchange: `POST /api/auth/oauth`
+
 
 ## Table of Contents
 - **Environment**
 - **How frontend should authenticate (recommended)**
 - **Endpoints**
-- **Server-side OAuth (optional)**
 - **Local testing (ngrok / localtunnel / mkcert)**
 - **Scripts**
 - **Troubleshooting**
@@ -113,16 +112,7 @@ Security notes:
 - DELETE `/api/users/me` (protected)
   - Soft-deletes the user by setting `status: 'deleted'` and `deletedAt`.
 
-## Server-side OAuth (optional) — how it works
-- The server exposes `POST /api/auth/oauth` to support a code-exchange flow. This is optional — the recommended flow is client-side Firebase sign-in + `provider-sync`.
-
-Server-side flow summary:
-1. User obtains `code` from provider (Google) by hitting the provider authorization URL with client_id and redirect_uri.
-2. Client posts `{ provider, code, redirectUri }` to the backend `POST /api/auth/oauth`.
-3. Backend exchanges `code` for tokens (access_token & id_token), fetches the user's profile, creates/links a Firebase Auth user and upserts Firestore profile, then returns a Firebase `customToken`.
-4. Client calls `signInWithCustomToken(customToken)` to authenticate with Firebase client SDK.
-
-Important: Make sure `redirectUri` used to obtain the `code` matches the one registered in Google Cloud credentials and matches the `redirectUri` sent to the server.
+<!-- Server-side code-exchange removed. Use client-side Firebase Authentication and POST /api/auth/provider-sync. -->
 
 ## Local testing — exposing your local server (HTTPS)
 
