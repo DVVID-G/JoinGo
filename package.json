@@ -11,31 +11,32 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "axios": "^1.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase": "^12.6.0",
     "firebase-admin": "^12.5.0",
-    "axios": "^1.5.0",
     "morgan": "^1.10.0",
-    "socket.io": "^4.7.5",
-    "peer": "^1.0.2",
     "nanoid": "^5.0.7",
+    "peer": "^1.0.2",
+    "socket.io": "^4.7.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "@types/morgan": "^1.9.4",
-    "ts-node-dev": "^2.0.0",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11",
+    "@types/morgan": "^1.9.4",
     "@types/node": "^20.11.30",
     "@types/supertest": "^2.0.16",
-    "eslint": "^8.57.0",
-    "@typescript-eslint/parser": "^7.4.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "prettier": "^3.2.5",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0",
     "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
-    "supertest": "^7.0.0"
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.0"
   }
 }

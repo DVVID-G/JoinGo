@@ -92,6 +92,7 @@ export function mergeProfile(current: User | undefined, incoming: Partial<User>,
   writeField('phoneNumber');
   writeField('locale');
   writeField('role');
+  writeField('age')
 
   // Provider metadata - always merge (prefer incoming if provided)
   if (incoming.provider) base.provider = incoming.provider;
