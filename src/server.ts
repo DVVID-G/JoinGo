@@ -20,6 +20,10 @@ app.use(morgan('dev', {
   }
 }));
 
+app.get('/', (_req, res) => {
+  res.send('🚀 JoinGo Backend is active! Ready to connect.');
+});
+
 registerRoutes(app);
 app.use(errorHandler);
 
