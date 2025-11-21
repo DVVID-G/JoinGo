@@ -2,6 +2,7 @@
 export interface User {
   uid: string;
   // Basic profile
+  age?: number;
   displayName?: string;
   firstName?: string;
   lastName?: string;
