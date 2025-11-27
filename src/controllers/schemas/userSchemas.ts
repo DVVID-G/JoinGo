@@ -6,7 +6,9 @@ export const syncUserSchema = z.object({
   role: z.enum(['host', 'participant']).optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  age: z.number().int().positive().optional()
+  age: z.number().int().positive().optional(),
+  // Optional phone number in E.164 format (e.g. +34123456789)
+  phoneNumber: z.string().regex(/^\\+\\d{7,15}$/, 'Phone number must be in E.164 format (e.g. +34123456789)').optional()
 });
 
 export const updateUserSchema = syncUserSchema;
