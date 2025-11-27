@@ -14,6 +14,13 @@ import { logger } from '../utils/logger';
  */
 export async function syncUserProfile(req: AuthenticatedRequest, res: Response) {
   const uid = req.user?.uid as string;
+  // If phoneNumber provided, normalize it: strip non-digits, preserve leading +
+  if (typeof req.body?.phoneNumber === 'string') {
+    const raw = req.body.phoneNumber as string;
+    const hasPlus = raw.trim().startsWith('+');
+    const digits = raw.replace(/\D/g, '');
+    req.body.phoneNumber = hasPlus ? `+${digits}` : digits;
+  }
   const data = validate(syncUserSchema, req.body);
   // Log whether client supplied a phoneNumber (do not log raw value)
   logger.info(`User ${uid} sync payload includes phoneNumber: ${data.phoneNumber ? 'yes' : 'no'}`);
@@ -40,6 +47,13 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
  */
 export async function updateMe(req: AuthenticatedRequest, res: Response) {
   const uid = req.user?.uid as string;
+  // Normalize incoming phoneNumber if present
+  if (typeof req.body?.phoneNumber === 'string') {
+    const raw = req.body.phoneNumber as string;
+    const hasPlus = raw.trim().startsWith('+');
+    const digits = raw.replace(/\D/g, '');
+    req.body.phoneNumber = hasPlus ? `+${digits}` : digits;
+  }
   const data = validate(updateUserSchema, req.body);
   // Log presence of phoneNumber for debugging (mask actual value)
   logger.info(`User ${uid} update payload includes phoneNumber: ${data.phoneNumber ? 'yes' : 'no'}`);
