@@ -4,6 +4,7 @@ import { syncUser, getUser, updateUser, softDeleteUser } from '../services/userS
 import { deleteUserAccount } from '../services/authService';
 import { validate } from '../utils/validate';
 import { syncUserSchema, updateUserSchema } from './schemas/userSchemas';
+import { logger } from '../utils/logger';
 
 /**
  * Upsert user profile for the authenticated user.
@@ -14,6 +15,8 @@ import { syncUserSchema, updateUserSchema } from './schemas/userSchemas';
 export async function syncUserProfile(req: AuthenticatedRequest, res: Response) {
   const uid = req.user?.uid as string;
   const data = validate(syncUserSchema, req.body);
+  // Log whether client supplied a phoneNumber (do not log raw value)
+  logger.info(`User ${uid} sync payload includes phoneNumber: ${data.phoneNumber ? 'yes' : 'no'}`);
   const user = await syncUser(uid, data);
   res.json({ data: user });
 }
@@ -38,6 +41,8 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
 export async function updateMe(req: AuthenticatedRequest, res: Response) {
   const uid = req.user?.uid as string;
   const data = validate(updateUserSchema, req.body);
+  // Log presence of phoneNumber for debugging (mask actual value)
+  logger.info(`User ${uid} update payload includes phoneNumber: ${data.phoneNumber ? 'yes' : 'no'}`);
   const user = await updateUser(uid, data);
   res.json({ data: user });
 }
