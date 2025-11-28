@@ -1,81 +1,45 @@
 # Progress
 
-Last update: 2025-11-20T00:00:00Z
+Last update: 2025-11-28T00:00:00Z
 
-What works (completed):
+## What works
 - Project skeleton and routing established under `src/`.
 - `GET /health` implemented and returns 200 OK.
 - Basic user profile CRUD implemented and wired to Firestore via `userService`.
 - `authMiddleware` exists to parse and validate Firebase tokens (needs full testing with real tokens).
 - Postman collection and environment created locally under `postman/` and run with Newman (results in `newman-results.json`).
 - Backlog updated to include auth/registration related acceptance criteria.
- - Manual registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) implemented and tested locally.
- - Account management endpoints added: `POST /api/auth/change-email`, `POST /api/auth/change-password`, and `DELETE /api/users/me?full=true` for Auth deletion.
- - Request logging with `morgan` integrated and TypeScript typing fixed for development.
+- Manual registration (`POST /api/auth/register`) and login (`POST /api/auth/login`) implemented and tested locally.
+- Account management endpoints added: `POST /api/auth/change-email`, `POST /api/auth/change-password`, and `DELETE /api/users/me?full=true` for Auth deletion.
+- Request logging with `morgan` integrated and TypeScript typing fixed for development.
 
-What remains (priority ordered):
-1. Finalize OAuth provider flows (Google/Facebook) and document required env vars.
-2. Add integration tests that mock or use test Firebase credentials for protected endpoints.
-3. Finalize Postman cloud upload: craft API payload matching Postman MCP schema or use user-provided collectionId.
-4. Add JSDoc comments across controllers/services where missing (project rule enforced in `.github/copilot-instructions.md`).
-5. Add `.env.example` entries for OAuth provider client IDs/secrets and document setup steps in README.
+## Recent pivot and completed refactor
+- Real-time responsibilities moved to the `eisc-chat` microservice (port `3001`). Backend acts as a client to `eisc-chat` and persists messages in Firestore.
+- `eisc-chat` implements `joinRoom(meetingId)` semantics, emits `chat:message` events per room, and enforces handshake auth: either `CHAT_SERVICE_TOKEN` (server→server) or Firebase ID tokens verified with `firebase-admin`.
+- Backend added `src/realtime/chatClient.ts` which connects to `eisc-chat`, listens for `chat:message`, and persists messages to `meetings/{meetingId}/messages` via `messageService.saveMessage`.
+- `CHAT_SERVICE_TOKEN` was generated and added to both `JoinGo-backend/.env` and `eisc-chat/.env` for local server→server authentication testing.
+- Masked logging was added to both services to help debug token mismatches (logs show masked prefixes/suffixes only).
 
-Known issues & blockers:
-- Postman Cloud API collection create/replace requires strict schema; prior attempts failed with validation errors and 404 PUT semantics.
-- Protected endpoint testing requires valid Firebase ID tokens or a robust mock strategy in tests.
-- Some dev-time scripts for starting the server programmatically showed transient PowerShell errors (server still became reachable in tests).
+## What doesn't work yet / blockers
+- `connect_error: unauthorized` was observed while connecting the backend chat client to `eisc-chat`. Typical causes: environment not reloaded after `.env` edits, token quoting/escaping issues, or the service not reading the updated env.
+- `GET /api/meetings/:id/messages` endpoint (REST) is not implemented — clients currently rely on backend/chatClient to persist messages, but history retrieval must be added.
+- Additional TypeScript build/run verification required after changes (some TS issues were fixed, but dev processes must be restarted to confirm a clean `npm run dev`).
 
-## Recent progress summary
-- Sprint 1 core features now implemented for manual flows and account management. Remaining Sprint 1 work is OAuth providers and optional SMTP email sending for password reset.
-- Team decided to postpone tests/CI per current scope; tests will be added once features stabilize.
+## Known issues & risks
+- Ensure `CHAT_SERVICE_TOKEN` has no extra quotes or trailing whitespace when written into `.env` files; these cause handshake failures. Masked logs help compare tokens.
+- Do not commit the service token to repository in production; use secret management.
+- Scaling `eisc-chat` needs Socket.IO adapter (Redis) to coordinate rooms across instances; this is not implemented yet.
 
-Notes & next checkpoint:
-- Next checkpoint is implementing `POST /api/auth/register` with associated tests and updating the Postman collection to include registration/login flows. After that, re-run Newman and attempt Postman cloud upload again.
-# Progress
+## Next milestones / immediate tasks
+1. Restart both `eisc-chat` and backend, capture masked token log lines from each service, and compare to validate token equality (look for masking fragments like `aa...zz`). If fragments differ, inspect `.env` for quotes/escape sequences.
+2. Implement `GET /api/meetings/:id/messages` in backend to expose persisted chat history to clients.
+3. Add a small integration test that sends a `chat:message` through `eisc-chat` and asserts Firestore save via backend chat client (mock Firestore or use test credentials).
+4. Plan production readiness: introduce Redis adapter for Socket.IO, centralize secrets, add monitoring and rate-limiting for chat events.
 
-## What Works
-- Server boots (`npm run dev`) with health endpoint.
-- User CRUD endpoints implemented (sync, me:get, me:put, me:delete soft) with validation.
-- Auth middleware structure present (awaiting real Firebase credentials for full verification tests).
-- Error handling unified; HttpError factories provide consistent codes.
-- Linting & formatting pass; basic test suite (health) green.
-
-## Implemented Patterns
-- Layered architecture: controllers -> services -> Firestore.
-- Soft delete strategy validated on user entity.
-- Environment abstraction via `config/env.ts` and newline fix for private key.
-
-## Pending / Backlog (Next Sprints)
-- Meetings: create/read/update/soft delete; capacity enforcement.
-- Socket.IO realtime room management + join/leave events.
-- Chat: realtime broadcast + persistence + pagination endpoint.
-- Signaling: PeerJS ID exchange events.
-- STUN server integration & ICE config endpoint.
-- AI summarization of chat transcripts at meeting closure.
-- Multimedia state sync events (toggle-audio/video).
-- Redundancy & health checks for multiple STUN servers.
-- Cleanup job for old meetings.
-- Structured logging (requestId correlation) & extended metrics.
-
-## Known Issues / Risks
-- Running with Firebase degraded mode -> skip user auth verification tests.
-- TypeScript 5.9 outside eslint recommended range (monitor for rule anomalies).
-- No integration tests yet for user endpoints.
-
-## Next Immediate Tasks
-1. Mock Firebase for integration/user tests.
-2. Implement meetings collection & endpoints.
-3. Introduce Socket.IO server scaffold and initial events.
- 
-- Initialization note: memory bank verified and initialized by agent on 2025-11-21T00:00:00Z.
-
-## Completed Sprint 1 Criteria (Partial)
-- Project scaffolding (TypeScript, ESLint, Prettier) DONE.
-- Health endpoint DONE.
-- User CRUD and auth middleware (structure) DONE; real token validation blocked by missing credentials.
-- Tests (health) DONE; need expansion for CRUD.
-- Env management & .env.example DONE.
+## Progress notes (latest)
+- 2025-11-28T00:00:00Z — Separated realtime to `eisc-chat` (port 3001). Backend updated to connect as client and persist messages. Handshake auth middleware added to `eisc-chat`. `CHAT_SERVICE_TOKEN` generated and placed in both environments. Masked logging added to help debug `unauthorized` handshake.
 
 ## Monitoring
-- Ensure addition of each new collection path remains centralized (avoid literal strings scattering).
-- Review performance on chat message pagination once implemented.
+- Verify token equality after any `.env` changes and restart processes.
+- After `GET /api/meetings/:id/messages` is implemented, check message pagination and query performance on Firestore.
+

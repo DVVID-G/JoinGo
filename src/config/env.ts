@@ -20,4 +20,9 @@ export const config = {
     privateKey: (getEnv('FIREBASE_PRIVATE_KEY') || '').replace(/\\n/g, '\n')
   },
   stunServerUrl: getEnv('STUN_SERVER_URL')
+  ,
+  // Optional external chat microservice to connect to (socket.io URL)
+  chatServiceUrl: getEnv('CHAT_SERVICE_URL'),
+  // Optional token used to authenticate this backend with the external chat microservice
+  chatServiceToken: getEnv('CHAT_SERVICE_TOKEN')
 };
