@@ -11,3 +11,8 @@ meetingRouter.get('/api/meetings', authMiddleware, wrapAsync(getMyMeetingsContro
 meetingRouter.get('/api/meetings/:id', wrapAsync(getMeetingController));
 // Fetch recent persisted messages for a meeting (protected)
 meetingRouter.get('/api/meetings/:id/messages', authMiddleware, wrapAsync(getMeetingMessagesController));
+// Update meeting status (soft-delete / restore)
+meetingRouter.patch('/api/meetings/:id/status', authMiddleware, wrapAsync(async (req, res) => {
+	// Delegate to controller
+	return await (await import('../controllers/meetingController')).updateMeetingStatusController(req as any, res as any);
+}));

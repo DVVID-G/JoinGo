@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createMeeting, getMeeting, listMeetingsByHost } from '../services/meetingService';
+import { createMeeting, getMeeting, listMeetingsByHost, updateMeetingStatus } from '../services/meetingService';
 import { firebaseDb } from '../config/firebase';
 import { getRecentMessages } from '../services/messageService';
 import { getEnv } from '../config/env';
@@ -73,5 +73,27 @@ export async function getMyMeetingsController(req: Request, res: Response) {
       console.error('getMyMeetingsController fallback failed:', err2);
       return res.status(500).json({ error: { code: 'UNEXPECTED', message: 'Unexpected error' } });
     }
+  }
+}
+
+/**
+ * Update meeting status (soft-delete / restore).
+ * Protected: only host may update status.
+ */
+export async function updateMeetingStatusController(req: Request, res: Response) {
+  const uid = (req as any).user?.uid as string;
+  if (!uid) return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
+  const id = req.params.id as string;
+  const bodySchema = z.object({ status: z.enum(['active', 'inactive', 'closed']) });
+  const data = validate(bodySchema, req.body);
+  try {
+    const updated = await updateMeetingStatus(id, uid, data.status as any);
+    return res.json({ data: updated });
+  } catch (err: any) {
+    if (err instanceof Error && (err as any).status) {
+      return res.status((err as any).status).json({ error: { code: (err as any).code || 'ERROR', message: err.message } });
+    }
+    console.error('updateMeetingStatusController error', err);
+    return res.status(500).json({ error: { code: 'UNEXPECTED', message: 'Unexpected error' } });
   }
 }

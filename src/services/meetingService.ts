@@ -6,6 +6,28 @@ import { Errors } from '../utils/httpErrors';
 const COLLECTION = 'meetings';
 
 /**
+ * Update the meeting's status (soft-delete or restore) and set audit fields.
+ * Only the meeting host should be allowed to change status; callers should pass hostUid for authorization.
+ */
+export async function updateMeetingStatus(meetingId: string, hostUid: string, status: 'active' | 'inactive' | 'closed') {
+  const db = firebaseDb();
+  if (!db) throw Errors.server('Firestore unavailable');
+  const ref = db.collection(COLLECTION).doc(meetingId);
+  const snap = await ref.get();
+  if (!snap.exists) throw Errors.notFound('Meeting not found');
+  const existing = snap.data() as any;
+  if (existing.hostUid !== hostUid) throw Errors.forbidden();
+
+  const now = new Date().toISOString();
+  const updatePayload: any = { status, updatedAt: now };
+  if (status === 'inactive') updatePayload.deletedAt = now;
+
+  await ref.set(updatePayload, { merge: true });
+  const updatedSnap = await ref.get();
+  return updatedSnap.data() as any;
+}
+
+/**
  * Create a meeting document in Firestore.
  */
 export async function createMeeting(hostUid: string, opts?: { maxParticipants?: number; ttlMinutes?: number; metadata?: any }): Promise<Meeting> {
