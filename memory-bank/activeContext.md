@@ -25,6 +25,11 @@ Recent changes (completed since last snapshot):
  - `eisc-chat` implemented rooms (`joinRoom`) and per-room `chat:message` emission; removed ephemeral in-memory history (persistence delegated to backend).
  - Backend implemented `chatClient` that connects to `eisc-chat`, persists messages to Firestore (`meetings/{id}/messages`), and logs masked token usage for debugging.
  - Added handshake auth middleware in `eisc-chat` and masked logging to debug token mismatches.
+ - Frontend: patched `useMeetingStore.ts` to add a token fallback and richer fetch logging:
+	 - `getClientToken()` now attempts Firebase `auth.currentUser.getIdToken(true)` and falls back to `localStorage.getItem('idToken')` for legacy/email-login flows.
+	 - `doFetchWithRetry()` logs token source (firebase/localStorage/none), request headers used, and retries once on 401 before surfacing the error.
+	 - Forced auto-logout/`window.location.replace('/login')` on 401 was temporarily disabled to allow in-production debugging; replaced with console warnings.
+	 - Removed several hardcoded `http://localhost` fallbacks in the frontend and moved calls to use Vite envs (`VITE_API_URL`, `VITE_CHAT_SERVICE_URL`). A fresh production build is required to ensure no localhost strings remain in `dist`.
  - Inserted `CHAT_SERVICE_TOKEN` into both `JoinGo-backend/.env` and `eisc-chat/.env` for server→server auth during development.
 
 Open design decisions / constraints:
@@ -75,6 +80,11 @@ After successful update, `profileCompleted` will be `true` if required fields ar
 
 ## Current Sprint Status
 - Sprint 1: core features implemented (health, user CRUD, manual auth flows, account management). Remaining Sprint 1 items narrowed to OAuth provider flows and optional email SMTP delivery for password reset.
+
+## Recent operational/debugging notes (2025-11-28)
+- Browser repro showed `GET|POST /api/meetings` returning 401 while `POST /api/auth/login` and `GET /api/users/me` succeeded. Investigation found the client did not attach `Authorization: Bearer <idToken>` to meetings requests.
+- Temporary mitigation: frontend meeting store now uses a token fallback (Firebase -> `localStorage.idToken`) and disables forced auto-logout to allow capture of failing requests and validation in production.
+- Required follow-ups: persist `idToken` on successful backend `POST /api/auth/login` (frontend login handler must `localStorage.setItem('idToken', idToken)`), rebuild frontend with correct Vite env vars, and capture DevTools Network request/cURL for one failing `/api/meetings` request to confirm headers and CORS.
 
 ## Immediate Next Steps
 - Implement meetings controller/service and Socket.IO scaffold.

@@ -2,6 +2,11 @@
 
 Last update: 2025-11-28T00:00:00Z
 
+## Recent edits (2025-11-28)
+- Frontend `useMeetingStore.ts` patched: token fallback (Firebase -> `localStorage.idToken`), `doFetchWithRetry()` logging + retry-on-401, and temporary disabling of forced auto-logout to enable in-production debugging.
+- Chat microservice (`eisc-chat`) updated to allow all origins when `ORIGIN` is unset (sets `cors.origin` to `true`) and to log Firebase Admin initialization conditions more clearly (masking tokens and surfacing `auth-unavailable` when admin cannot verify tokens).
+- Multiple frontend files were changed to remove hardcoded `http://localhost` fallbacks and to prefer Vite envs (`VITE_API_URL`, `VITE_CHAT_SERVICE_URL`). A rebuild is required to ensure `dist` contains no embedded localhost strings.
+
 ## What works
 - Project skeleton and routing established under `src/`.
 - `GET /health` implemented and returns 200 OK.
@@ -24,6 +29,21 @@ Last update: 2025-11-28T00:00:00Z
 - `connect_error: unauthorized` was observed while connecting the backend chat client to `eisc-chat`. Typical causes: environment not reloaded after `.env` edits, token quoting/escaping issues, or the service not reading the updated env.
 - `GET /api/meetings/:id/messages` endpoint (REST) is not implemented — clients currently rely on backend/chatClient to persist messages, but history retrieval must be added.
 - Additional TypeScript build/run verification required after changes (some TS issues were fixed, but dev processes must be restarted to confirm a clean `npm run dev`).
+
+### New blockers discovered (2025-11-28)
+- Browser calls to `GET|POST /api/meetings` return 401 while `POST /api/auth/login` and `GET /api/users/me` succeed. Investigation shows the frontend did not persist the `idToken` returned from `POST /api/auth/login` and therefore meeting requests lacked `Authorization` header.
+- Current temporary mitigations in place:
+	- `useMeetingStore` will attempt Firebase token first, then `localStorage.idToken` as fallback.
+	- Forced auto-logout on 401 is disabled to allow capturing failing network requests in production.
+
+### Required immediate actions
+1. Persist the `idToken` in the frontend login handler: after successful `POST /api/auth/login` response write `localStorage.setItem('idToken', body.data.idToken)` (secure note: do not commit sensitive tokens to version control).
+2. Rebuild and redeploy the frontend with correct `VITE_API_URL` / `VITE_CHAT_SERVICE_URL` values set in the build pipeline to avoid embedding localhost values.
+3. Capture and paste one failing `/api/meetings` request (DevTools → Network → Copy as cURL) to validate request headers (Authorization) and response CORS headers.
+
+## Progress notes (latest)
+- 2025-11-28T00:00:00Z — Separated realtime to `eisc-chat` (port 3001). Backend updated to connect as client and persist messages. Handshake auth middleware added to `eisc-chat`. `CHAT_SERVICE_TOKEN` generated and placed in both environments. Masked logging added to help debug `unauthorized` handshake.
+- 2025-11-28T12:30:00Z — Applied frontend patches to `useMeetingStore.ts` (token fallback, retry logging) and disabled auto-logout temporarily to enable in-production debugging. Chat-server CORS/admin logging updated.
 
 ## Known issues & risks
 - Ensure `CHAT_SERVICE_TOKEN` has no extra quotes or trailing whitespace when written into `.env` files; these cause handshake failures. Masked logs help compare tokens.
