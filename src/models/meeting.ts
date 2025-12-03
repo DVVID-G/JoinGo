@@ -10,4 +10,6 @@ export interface Meeting {
   status?: 'active' | 'inactive' | 'closed';
   maxParticipants?: number;
   metadata?: Record<string, any>;
+  voiceEnabled?: boolean;
+  voiceRoomId?: string;
 }

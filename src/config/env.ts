@@ -24,5 +24,12 @@ export const config = {
   // Optional external chat microservice to connect to (socket.io URL)
   chatServiceUrl: getEnv('CHAT_SERVICE_URL'),
   // Optional token used to authenticate this backend with the external chat microservice
-  chatServiceToken: getEnv('CHAT_SERVICE_TOKEN')
+  chatServiceToken: getEnv('CHAT_SERVICE_TOKEN'),
+  // Voice signaling microservice configuration (Socket.IO + Peer.js signaling)
+  voiceServiceUrl: getEnv('VOICE_SERVICE_URL'),
+  voiceServiceToken: getEnv('VOICE_SERVICE_TOKEN'),
+  webRtcSignalUrl: getEnv('WEBRTC_SIGNAL_URL'),
+  iceServerUrl: getEnv('ICE_SERVER_URL'),
+  iceServerUsername: getEnv('ICE_SERVER_USERNAME'),
+  iceServerCredential: getEnv('ICE_SERVER_CREDENTIAL')
 };

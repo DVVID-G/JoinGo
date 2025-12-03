@@ -179,9 +179,9 @@ Enfoque: Señalización WebRTC para audio y valor agregado con IA.
 Tipo: Comunicación Real-time | Prioridad: Alta
 "Como sistema, quiero intercambiar PeerIDs entre clientes para permitir conexiones Peer-to-Peer de audio."
 ###Criterios de Aceptación:
-[ ] Evento user-connected: Notificar a la sala cuando un usuario nuevo se conecta a PeerJS.
-[ ] Manejo de intercambio de IDs para establecer malla (Mesh topology).
-[ ] Evento user-disconnected: Notificar a los pares para cerrar flujos de medios.
+[x] Evento user-connected: Notificar a la sala cuando un usuario nuevo se conecta a PeerJS. (Implementado mediante Voice-video-server + helper `webRtc.js`).
+[x] Manejo de intercambio de IDs para establecer malla (Mesh topology).
+[x] Evento user-disconnected: Notificar a los pares para cerrar flujos de medios.
 [ ] Tipado de payloads de señalización y documentación JSDoc.
 ###Definición de Hecho (DoD):
 Flujo de señalización probado: Cliente A recibe ID de Cliente B.
@@ -193,8 +193,8 @@ Tipo: Infraestructura | Prioridad: Media
 "Como desarrollador, quiero proveer un servidor STUN para resolver conexiones a través de NAT."
 ###Criterios de Aceptación:
 [ ] Implementación/Configuración de servicio STUN en el backend (o contenedor dedicado).
-[ ] Endpoint GET /api/config/ice-servers: Retorna la configuración ICE (stun:url:port).
-[ ] Uso de variables de entorno para listar servidores y puertos.
+[x] Endpoint GET /api/voice/config: Retorna la configuración ICE (stun:url:port) + signaling URL.
+[x] Uso de variables de entorno para listar servidores y puertos.
 ###Definición de Hecho (DoD):
 Servidor STUN responde a peticiones de binding.
 URL inyectada vía variables de entorno.
