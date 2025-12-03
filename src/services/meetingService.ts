@@ -41,7 +41,9 @@ export async function createMeeting(hostUid: string, opts?: { maxParticipants?: 
     createdAt: now,
     status: 'active',
     maxParticipants: opts?.maxParticipants || 10,
-    metadata: opts?.metadata
+    metadata: opts?.metadata,
+    voiceEnabled: true,
+    voiceRoomId: id
   };
   if (opts?.ttlMinutes) {
     meeting.expiresAt = new Date(Date.now() + opts.ttlMinutes * 60000).toISOString();
